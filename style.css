@@ -29,6 +29,12 @@
   box-sizing: border-box;
 }
 
+html {
+  overflow-x: hidden;
+  max-width: 100vw;
+  width: 100%;
+}
+
 body {
   font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   background-color: var(--bg-primary);
@@ -37,10 +43,14 @@ body {
   padding: 2.5rem 1rem;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+  max-width: 100vw;
+  width: 100%;
 }
 
 .dashboard-container {
   max-width: 960px;
+  width: 100%;
   margin: 0 auto;
 }
 
@@ -173,6 +183,8 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
   margin-bottom: 1.5rem;
 }
 
@@ -408,6 +420,24 @@ body {
 
 .history-table-container {
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  width: 100%;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 #f8fafc;
+}
+
+.history-table-container::-webkit-scrollbar {
+  height: 6px;
+}
+
+.history-table-container::-webkit-scrollbar-track {
+  background: #f8fafc;
+  border-radius: 4px;
+}
+
+.history-table-container::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
 }
 
 .history-table {
@@ -555,8 +585,16 @@ body {
   border-color: #111827;
 }
 
-/* Responsive adjustments */
+/* ==========================================================================
+   Comprehensive Responsive System (Tablets, Mobiles, and Small Screens)
+   ========================================================================== */
+
+/* Tablet & Smaller Screens (<= 768px) */
 @media (max-width: 768px) {
+  body {
+    padding: 1.75rem 1rem;
+  }
+
   .gauge-and-legend-grid {
     grid-template-columns: 1fr;
     gap: 2rem;
@@ -566,20 +604,405 @@ body {
     padding-left: 0;
     border-left: none;
     border-top: 1px dashed var(--border-color);
-    padding-top: 1.5rem;
+    padding-top: 1.75rem;
   }
 
   .main-card {
+    padding: 1.75rem 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .history-section {
     padding: 1.5rem;
+    margin-bottom: 1.5rem;
   }
 
   .dashboard-title {
-    font-size: 1.75rem;
+    font-size: 1.85rem;
   }
 
   .pagination-container {
     flex-direction: column;
     align-items: center;
     gap: 0.85rem;
+  }
+}
+
+/* Standard Mobile Devices (<= 576px) */
+@media (max-width: 576px) {
+  body {
+    padding: 1.25rem 0.75rem;
+  }
+
+  .header-section {
+    margin-bottom: 1.5rem;
+  }
+
+  .accent-bar {
+    width: 48px;
+    height: 5px;
+    margin-bottom: 0.75rem;
+  }
+
+  .header-content {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+
+  .dashboard-title {
+    font-size: 1.55rem;
+    letter-spacing: -0.02em;
+  }
+
+  .dashboard-subtitle {
+    font-size: 0.88rem;
+    margin-top: 0.25rem;
+  }
+
+  .header-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+  }
+
+  .main-card {
+    padding: 1.35rem 1.15rem;
+    margin-bottom: 1.25rem;
+    border-radius: var(--radius-md);
+  }
+
+  .card-top-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.35rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .card-caption {
+    font-size: 1.2rem;
+  }
+
+  .last-updated-text {
+    font-size: 0.8rem;
+    word-break: break-word;
+  }
+
+  .gauge-and-legend-grid {
+    gap: 1.5rem;
+  }
+
+  .gauge-wrapper {
+    max-width: 320px;
+    width: 100%;
+  }
+
+  .gauge-svg {
+    max-width: 100%;
+  }
+
+  .aqi-value-number {
+    font-size: clamp(2.6rem, 11vw, 3.25rem);
+  }
+
+  .aqi-unit {
+    font-size: 0.95rem;
+  }
+
+  .status-badge {
+    font-size: 0.85rem;
+    padding: 0.32rem 0.9rem;
+  }
+
+  .legend-column {
+    padding-top: 1.35rem;
+  }
+
+  .legend-header {
+    font-size: 1.1rem;
+    margin-bottom: 0.85rem;
+  }
+
+  .legend-list {
+    gap: 0.55rem;
+  }
+
+  .legend-item {
+    padding: 0.35rem 0.5rem;
+  }
+
+  .legend-label {
+    font-size: 0.9rem;
+  }
+
+  .legend-scale {
+    font-size: 0.78rem;
+  }
+
+  .health-advice-box {
+    margin-top: 1.5rem;
+    padding: 1rem 1.15rem;
+    gap: 0.75rem;
+  }
+
+  .advice-icon {
+    font-size: 1.35rem;
+    flex-shrink: 0;
+  }
+
+  .advice-content strong {
+    font-size: 0.9rem;
+  }
+
+  .advice-content p {
+    font-size: 0.84rem;
+  }
+
+  .history-section {
+    padding: 1.35rem 1.15rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .history-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.35rem;
+    margin-bottom: 1rem;
+  }
+
+  .history-title {
+    font-size: 1.15rem;
+  }
+
+  .history-subtitle {
+    font-size: 0.82rem;
+  }
+
+  .history-table {
+    min-width: 330px;
+    font-size: 0.85rem;
+  }
+
+  .history-table th,
+  .history-table td {
+    padding: 0.7rem 0.6rem;
+  }
+
+  .aqi-pill {
+    min-width: 44px;
+    padding: 0.18rem 0.5rem;
+    font-size: 0.88rem;
+  }
+
+  .table-status-tag {
+    font-size: 0.78rem;
+    padding: 0.18rem 0.5rem;
+  }
+
+  .pagination-container {
+    padding-top: 1rem;
+    gap: 0.85rem;
+  }
+
+  .pagination-info {
+    font-size: 0.8rem;
+    text-align: center;
+  }
+
+  .pagination-controls {
+    justify-content: center;
+    width: 100%;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+  }
+}
+
+/* Extra Small Phones (<= 380px, e.g. iPhone SE, Compact devices) */
+@media (max-width: 380px) {
+  body {
+    padding: 0.85rem 0.45rem;
+  }
+
+  .header-section {
+    margin-bottom: 1.25rem;
+  }
+
+  .accent-bar {
+    width: 40px;
+    height: 4px;
+  }
+
+  .dashboard-title {
+    font-size: 1.35rem;
+  }
+
+  .dashboard-subtitle {
+    font-size: 0.8rem;
+  }
+
+  .live-status-pill {
+    padding: 0.3rem 0.65rem;
+    font-size: 0.78rem;
+  }
+
+  .refresh-btn {
+    padding: 0.35rem 0.7rem;
+    font-size: 0.78rem;
+  }
+
+  .main-card {
+    padding: 1.1rem 0.85rem;
+    margin-bottom: 1rem;
+  }
+
+  .card-caption {
+    font-size: 1.1rem;
+  }
+
+  .last-updated-text {
+    font-size: 0.76rem;
+  }
+
+  .gauge-wrapper {
+    max-width: 260px;
+  }
+
+  .aqi-value-number {
+    font-size: 2.5rem;
+  }
+
+  .status-badge {
+    font-size: 0.8rem;
+    padding: 0.28rem 0.75rem;
+  }
+
+  .legend-column {
+    padding-top: 1.15rem;
+  }
+
+  .legend-header {
+    font-size: 1rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .legend-list {
+    gap: 0.45rem;
+  }
+
+  .legend-item {
+    padding: 0.3rem 0.4rem;
+    gap: 0.65rem;
+  }
+
+  .legend-bullet {
+    width: 11px;
+    height: 11px;
+  }
+
+  .legend-label {
+    font-size: 0.84rem;
+  }
+
+  .legend-scale {
+    font-size: 0.75rem;
+  }
+
+  .health-advice-box {
+    margin-top: 1.25rem;
+    padding: 0.85rem 0.9rem;
+    gap: 0.65rem;
+  }
+
+  .advice-icon {
+    font-size: 1.2rem;
+  }
+
+  .advice-content strong {
+    font-size: 0.86rem;
+  }
+
+  .advice-content p {
+    font-size: 0.8rem;
+  }
+
+  .history-section {
+    padding: 1.1rem 0.85rem;
+    margin-bottom: 1rem;
+  }
+
+  .history-title {
+    font-size: 1.05rem;
+  }
+
+  .history-subtitle {
+    font-size: 0.78rem;
+  }
+
+  .history-table {
+    min-width: 300px;
+    font-size: 0.8rem;
+  }
+
+  .history-table th,
+  .history-table td {
+    padding: 0.6rem 0.45rem;
+  }
+
+  .aqi-pill {
+    min-width: 38px;
+    padding: 0.15rem 0.4rem;
+    font-size: 0.82rem;
+  }
+
+  .table-status-tag {
+    font-size: 0.74rem;
+    padding: 0.15rem 0.4rem;
+  }
+
+  .pagination-info {
+    font-size: 0.78rem;
+  }
+
+  .page-nav-btn {
+    padding: 0.32rem 0.55rem;
+    font-size: 0.78rem;
+  }
+
+  .page-num-btn {
+    min-width: 28px;
+    height: 28px;
+    font-size: 0.78rem;
+  }
+}
+
+/* Ultra-compact Screens (<= 320px) */
+@media (max-width: 320px) {
+  body {
+    padding: 0.65rem 0.35rem;
+  }
+
+  .main-card {
+    padding: 0.95rem 0.65rem;
+  }
+
+  .history-section {
+    padding: 0.95rem 0.65rem;
+  }
+
+  .dashboard-title {
+    font-size: 1.25rem;
+  }
+
+  .gauge-wrapper {
+    max-width: 220px;
+  }
+
+  .aqi-value-number {
+    font-size: 2.25rem;
+  }
+
+  .history-table {
+    min-width: 280px;
   }
 }
