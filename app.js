@@ -8,7 +8,7 @@
 const CONFIG = {
   API_LATEST: 'https://yachu.baliyoventures.com/api/aqi/latest/',
   API_HISTORY: 'https://yachu.baliyoventures.com/api/aqi/',
-  REFRESH_INTERVAL_MS: 30000, // 30 seconds
+  REFRESH_INTERVAL_MS: 1 * 60 * 1000, // Every 1 minute (60,000 ms)
   MAX_SCALE_AQI: 300,
   PAGE_SIZE: 10
 };
@@ -79,6 +79,8 @@ const AQI_CATEGORIES = [
 
 // State
 let currentAqi = 0;
+let lastSeenId = null;
+let lastSeenDateTime = null;
 let refreshTimer = null;
 let isFetching = false;
 let currentPage = 1;
@@ -213,14 +215,26 @@ async function fetchLatestAqi() {
     const data = await response.json();
     const newAqi = parseInt(data.aqi, 10);
 
-    // Animate needle and counter
-    updateNeedleAngle(newAqi);
-    animateCounter(currentAqi, newAqi);
-    currentAqi = newAqi;
+    const isFirstLoad = (lastSeenId === null);
+    const isNewData = (data.id !== lastSeenId || data.dateTime !== lastSeenDateTime);
 
-    // Update Category UI
-    const category = getAqiCategory(newAqi);
-    updateCategoryUI(category);
+    if (isFirstLoad || isNewData) {
+      // New data arrived: animate needle and counter to new reading
+      updateNeedleAngle(newAqi);
+      animateCounter(currentAqi, newAqi);
+      currentAqi = newAqi;
+      lastSeenId = data.id;
+      lastSeenDateTime = data.dateTime;
+
+      // Update category highlighting and health advisory
+      const category = getAqiCategory(newAqi);
+      updateCategoryUI(category);
+
+      // If a brand new reading arrived from the sensor, refresh history records
+      if (!isFirstLoad) {
+        fetchHistoryAqi(currentPage);
+      }
+    }
 
     // Update timestamp
     lastUpdatedTime.textContent = formatDateTime(data.dateTime);

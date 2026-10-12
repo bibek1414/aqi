@@ -12,8 +12,8 @@ A real-time Air Quality Index (AQI) dashboard featuring a semi-circular speedome
   - `201–250`: Very Unhealthy (Purple)
   - `251–300`: Very Hazardous (Maroon)
 - **Active Category Highlight**: Automatically highlights the current status on the legend list and displays actionable health recommendations.
-- **Live Auto-Refresh**: Automatically fetches new measurements every 30 seconds with an instant manual "Refresh" button.
-- **Recent AQI Records Table**: Connects to the history endpoint to display chronological records with status badges and localized timestamps.
+- **Live Auto-Refresh**: Automatically checks for new measurements every 5 minutes (and immediately upon clicking "Refresh") with automatic detection of new sensor records.
+- **Recent AQI Records Table**: Connects to the history endpoint with 10-item pagination, status badges, and localized timestamps.
 
 ---
 
