@@ -163,6 +163,9 @@
           <h2 class="history-title">Recent AQI Records</h2>
           <p class="history-subtitle">Historical air quality measurements from the sensor stream</p>
         </div>
+        <div class="records-count-badge" id="records-total-badge">
+          -- records
+        </div>
       </div>
 
       <div class="history-table-container">
@@ -182,9 +185,22 @@
         </table>
       </div>
 
-      <!-- Pagination Controls (10 items per page) -->
+      <!-- Pagination Controls -->
       <div class="pagination-container" id="pagination-container">
-        <div class="pagination-info" id="pagination-info">Showing 1 to 5 of 5 records</div>
+        <div class="pagination-left">
+          <div class="pagination-info" id="pagination-info">Showing 1 to 10 of 10 records</div>
+          <div class="page-size-wrapper">
+            <label for="page-size-select" class="page-size-label">Show:</label>
+            <select id="page-size-select" class="page-size-select" aria-label="Records per page">
+              <option value="5">5</option>
+              <option value="10">10</option>
+              <option value="20" selected>20</option>
+              <option value="50">50</option>
+            </select>
+            <span class="page-size-suffix">per page</span>
+          </div>
+        </div>
+
         <div class="pagination-controls">
           <button type="button" class="page-nav-btn" id="prev-page-btn" disabled aria-label="Previous Page">
             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5">

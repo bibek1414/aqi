@@ -416,6 +416,7 @@ body {
   background-color: #f1f5f9;
   padding: 0.25rem 0.75rem;
   border-radius: 9999px;
+  border: 1px solid #e2e8f0;
 }
 
 .history-table-container {
@@ -500,7 +501,7 @@ body {
   padding: 2rem !important;
 }
 
-/* Pagination Styling (10 items per page) */
+/* Pagination Styling */
 .pagination-container {
   display: flex;
   justify-content: space-between;
@@ -512,10 +513,53 @@ body {
   border-top: 1px solid var(--border-color);
 }
 
+.pagination-left {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+}
+
 .pagination-info {
   font-size: 0.85rem;
   color: var(--text-muted);
   font-weight: 500;
+}
+
+.page-size-wrapper {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.82rem;
+  color: #475569;
+}
+
+.page-size-label {
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.page-size-select {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #1e293b;
+  background-color: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: var(--radius-sm);
+  outline: none;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.page-size-select:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+
+.page-size-suffix {
+  color: var(--text-muted);
+  font-size: 0.8rem;
 }
 
 .pagination-controls {
@@ -585,11 +629,7 @@ body {
   border-color: #111827;
 }
 
-/* ==========================================================================
-   Comprehensive Responsive System (Tablets, Mobiles, and Small Screens)
-   ========================================================================== */
 
-/* Tablet & Smaller Screens (<= 768px) */
 @media (max-width: 768px) {
   body {
     padding: 1.75rem 1rem;
@@ -769,6 +809,44 @@ body {
     align-items: flex-start;
     gap: 0.35rem;
     margin-bottom: 1rem;
+  }
+
+  .filter-card {
+    padding: 1rem;
+    gap: 0.75rem;
+  }
+
+  .filter-form {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .filter-inputs-group {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+    width: 100%;
+  }
+
+  .filter-field {
+    min-width: 100%;
+    width: 100%;
+  }
+
+  .filter-actions-group {
+    width: 100%;
+  }
+
+  .filter-actions-group .filter-btn {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .filter-bottom-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.65rem;
   }
 
   .history-title {

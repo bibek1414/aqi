@@ -10,7 +10,7 @@ const CONFIG = {
   API_HISTORY: 'https://yachu.baliyoventures.com/api/aqi/',
   REFRESH_INTERVAL_MS: 1 * 60 * 1000, // Every 1 minute (60,000 ms)
   MAX_SCALE_AQI: 300,
-  PAGE_SIZE: 10
+  PAGE_SIZE: 20 // Default page size: 20 records
 };
 
 // AQI Category Definitions matching the gauge scale
@@ -84,6 +84,7 @@ let lastSeenDateTime = null;
 let refreshTimer = null;
 let isFetching = false;
 let currentPage = 1;
+let pageSize = CONFIG.PAGE_SIZE;
 let totalPages = 1;
 let totalRecords = 0;
 
@@ -103,6 +104,8 @@ const paginationInfo = document.getElementById('pagination-info');
 const prevPageBtn = document.getElementById('prev-page-btn');
 const nextPageBtn = document.getElementById('next-page-btn');
 const pageNumbersList = document.getElementById('page-numbers-list');
+const pageSizeSelect = document.getElementById('page-size-select');
+const recordsTotalBadge = document.getElementById('records-total-badge');
 
 /**
  * Determine category information for a given AQI value
@@ -230,7 +233,7 @@ async function fetchLatestAqi() {
       const category = getAqiCategory(newAqi);
       updateCategoryUI(category);
 
-      // If a brand new reading arrived from the sensor, refresh history records
+      // Refresh history records if new reading arrived
       if (!isFirstLoad) {
         fetchHistoryAqi(currentPage);
       }
@@ -257,18 +260,22 @@ async function fetchLatestAqi() {
 }
 
 /**
- * Fetch AQI history from API and render history table with 10-item pagination
+ * Fetch AQI history with page and page_size parameters
  */
 async function fetchHistoryAqi(page = currentPage) {
   try {
-    // Attempt request with page query parameter
     const url = new URL(CONFIG.API_HISTORY);
-    if (page > 1) {
-      url.searchParams.set('page', page);
-    }
+    url.searchParams.set('page', page);
+    url.searchParams.set('page_size', pageSize);
 
     const response = await fetch(url.toString(), { cache: 'no-store' });
+    
+    // Graceful recovery for 404 (e.g., page requested out of bounds)
     if (!response.ok) {
+      if (response.status === 404 && page > 1) {
+        currentPage = 1;
+        return fetchHistoryAqi(1);
+      }
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
 
@@ -276,16 +283,17 @@ async function fetchHistoryAqi(page = currentPage) {
     const rawList = Array.isArray(data.results) ? data.results : (Array.isArray(data) ? data : []);
     
     totalRecords = typeof data.count === 'number' ? data.count : rawList.length;
-    totalPages = Math.max(1, Math.ceil(totalRecords / CONFIG.PAGE_SIZE));
+    totalPages = Math.max(1, Math.ceil(totalRecords / pageSize));
     currentPage = Math.min(Math.max(1, page), totalPages);
 
-    // If API returned more than PAGE_SIZE in results (client-side slicing fallback)
-    const displayedRecords = (rawList.length > CONFIG.PAGE_SIZE)
-      ? rawList.slice((currentPage - 1) * CONFIG.PAGE_SIZE, currentPage * CONFIG.PAGE_SIZE)
+    // Fallback slicing if server returned more items than requested
+    const displayedRecords = (rawList.length > pageSize)
+      ? rawList.slice((currentPage - 1) * pageSize, currentPage * pageSize)
       : rawList;
 
     renderHistoryTable(displayedRecords);
     updatePaginationUI(totalRecords, currentPage);
+    updateRecordsCountBadge(totalRecords);
     return displayedRecords;
   } catch (error) {
     console.error('Failed to fetch AQI history:', error);
@@ -297,8 +305,17 @@ async function fetchHistoryAqi(page = currentPage) {
       </tr>
     `;
     updatePaginationUI(0, 1);
+    updateRecordsCountBadge(0);
     return null;
   }
+}
+
+/**
+ * Update total records badge
+ */
+function updateRecordsCountBadge(total) {
+  if (!recordsTotalBadge) return;
+  recordsTotalBadge.textContent = `${total} ${total === 1 ? 'record' : 'records'}`;
 }
 
 /**
@@ -307,28 +324,54 @@ async function fetchHistoryAqi(page = currentPage) {
 function updatePaginationUI(total, current) {
   if (!paginationInfo || !prevPageBtn || !nextPageBtn || !pageNumbersList) return;
 
-  const start = total === 0 ? 0 : (current - 1) * CONFIG.PAGE_SIZE + 1;
-  const end = Math.min(current * CONFIG.PAGE_SIZE, total);
+  const start = total === 0 ? 0 : (current - 1) * pageSize + 1;
+  const end = Math.min(current * pageSize, total);
   paginationInfo.textContent = `Showing ${start} to ${end} of ${total} records`;
 
   prevPageBtn.disabled = (current <= 1);
-  nextPageBtn.disabled = (current >= totalPages);
+  nextPageBtn.disabled = (current >= totalPages || total === 0);
 
-  // Render page number buttons
+  // Render page number buttons with smart ellipsis
   pageNumbersList.innerHTML = '';
-  for (let i = 1; i <= totalPages; i++) {
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = `page-num-btn ${i === current ? 'active' : ''}`;
-    btn.textContent = i;
-    btn.setAttribute('aria-label', `Page ${i}`);
-    btn.addEventListener('click', () => {
-      if (currentPage !== i) {
-        fetchHistoryAqi(i);
-      }
-    });
-    pageNumbersList.appendChild(btn);
+  if (totalPages <= 1) return;
+
+  let pages = [];
+  if (totalPages <= 7) {
+    for (let i = 1; i <= totalPages; i++) {
+      pages.push(i);
+    }
+  } else {
+    if (current <= 4) {
+      pages = [1, 2, 3, 4, 5, '...', totalPages];
+    } else if (current >= totalPages - 3) {
+      pages = [1, '...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
+    } else {
+      pages = [1, '...', current - 1, current, current + 1, '...', totalPages];
+    }
   }
+
+  pages.forEach((p) => {
+    if (p === '...') {
+      const span = document.createElement('span');
+      span.className = 'page-ellipsis';
+      span.textContent = '…';
+      span.style.padding = '0 0.35rem';
+      span.style.color = '#94a3b8';
+      pageNumbersList.appendChild(span);
+    } else {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = `page-num-btn ${p === current ? 'active' : ''}`;
+      btn.textContent = p;
+      btn.setAttribute('aria-label', `Page ${p}`);
+      btn.addEventListener('click', () => {
+        if (currentPage !== p) {
+          fetchHistoryAqi(p);
+        }
+      });
+      pageNumbersList.appendChild(btn);
+    }
+  });
 }
 
 /**
@@ -338,7 +381,12 @@ function renderHistoryTable(records) {
   if (!records || records.length === 0) {
     historyTableBody.innerHTML = `
       <tr>
-        <td colspan="3" class="loading-cell">No history records found.</td>
+        <td colspan="3" class="loading-cell">
+          <div style="padding: 1.25rem 0;">
+            <p style="font-weight: 600; color: #475569; margin-bottom: 0.35rem;">No AQI records found</p>
+            <p style="font-size: 0.85rem; color: #94a3b8;">No sensor observations recorded yet.</p>
+          </div>
+        </td>
       </tr>
     `;
     return;
@@ -399,6 +447,17 @@ function init() {
   refreshBtn.addEventListener('click', () => {
     refreshDashboard();
   });
+
+  // Page size selector handler
+  if (pageSizeSelect) {
+    pageSizeSelect.value = pageSize;
+    pageSizeSelect.addEventListener('change', (e) => {
+      const newSize = parseInt(e.target.value, 10) || 20;
+      pageSize = newSize;
+      currentPage = 1;
+      fetchHistoryAqi(1);
+    });
+  }
 
   // Pagination Previous / Next buttons
   prevPageBtn.addEventListener('click', () => {
