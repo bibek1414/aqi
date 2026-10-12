@@ -165,7 +165,7 @@ body {
   border-radius: var(--radius-md);
   padding: 2.25rem 2.5rem;
   box-shadow: var(--shadow-md);
-  margin-bottom: 0.85rem;
+  margin-bottom: 2rem;
   position: relative;
 }
 
@@ -468,65 +468,6 @@ body {
   text-align: center;
   color: var(--text-muted);
   padding: 2rem !important;
-}
-
-/* Card Link Bar (Directly below gauge card matching reference screenshot) */
-.card-footer-links {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 1rem;
-  margin-top: 0.75rem;
-  margin-bottom: 2.25rem;
-  padding: 0 0.25rem;
-}
-
-.card-links-left {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.visit-website-link {
-  color: var(--accent-red);
-  font-size: 1.05rem;
-  font-weight: 700;
-  text-decoration: underline;
-  text-underline-offset: 4px;
-  transition: opacity 0.2s;
-}
-
-.visit-website-link:hover {
-  color: #770000;
-  opacity: 0.85;
-}
-
-.api-link {
-  color: #2563eb;
-  font-size: 0.85rem;
-  font-weight: 600;
-  text-decoration: none;
-  background-color: #eff6ff;
-  padding: 0.25rem 0.65rem;
-  border-radius: 6px;
-  border: 1px solid #dbeafe;
-  transition: var(--transition);
-}
-
-.api-link:hover {
-  background-color: #dbeafe;
-  color: #1d4ed8;
-}
-
-.footer-separator {
-  color: #cbd5e1;
-}
-
-.sync-notice {
-  font-size: 0.85rem;
-  color: var(--text-muted);
-  font-weight: 500;
 }
 
 /* Responsive adjustments */

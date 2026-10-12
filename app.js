@@ -93,7 +93,6 @@ const refreshBtn = document.getElementById('refresh-btn');
 const connectionStatus = document.getElementById('connection-status');
 const liveIndicator = document.getElementById('live-indicator');
 const historyTableBody = document.getElementById('history-table-body');
-const recordsCount = document.getElementById('records-count');
 
 /**
  * Determine category information for a given AQI value
@@ -248,14 +247,13 @@ async function fetchHistoryAqi() {
     const data = await response.json();
     const records = Array.isArray(data.results) ? data.results : (Array.isArray(data) ? data : []);
 
-    recordsCount.textContent = `Showing ${records.length} records`;
     renderHistoryTable(records);
     return records;
   } catch (error) {
     console.error('Failed to fetch AQI history:', error);
     historyTableBody.innerHTML = `
       <tr>
-        <td colspan="4" class="loading-cell" style="color: #ef4444;">
+        <td colspan="3" class="loading-cell" style="color: #ef4444;">
           Unable to load history records. (${error.message})
         </td>
       </tr>
@@ -271,7 +269,7 @@ function renderHistoryTable(records) {
   if (!records || records.length === 0) {
     historyTableBody.innerHTML = `
       <tr>
-        <td colspan="4" class="loading-cell">No history records found.</td>
+        <td colspan="3" class="loading-cell">No history records found.</td>
       </tr>
     `;
     return;
@@ -283,7 +281,6 @@ function renderHistoryTable(records) {
 
     return `
       <tr>
-        <td><strong>#${record.id}</strong></td>
         <td>
           <span class="aqi-pill" style="background-color: ${cat.badgeColor};">
             ${val}
