@@ -88,6 +88,13 @@ let pageSize = CONFIG.PAGE_SIZE;
 let totalPages = 1;
 let totalRecords = 0;
 
+// Filter state
+let currentFilter = {
+  startDate: '', // 'YYYY-MM-DD'
+  endDate: '',   // 'YYYY-MM-DD'
+  preset: 'all'
+};
+
 // DOM Elements
 const needleGroup = document.getElementById('needle-group');
 const aqiValueNumber = document.getElementById('aqi-value-number');
@@ -106,6 +113,14 @@ const nextPageBtn = document.getElementById('next-page-btn');
 const pageNumbersList = document.getElementById('page-numbers-list');
 const pageSizeSelect = document.getElementById('page-size-select');
 const recordsTotalBadge = document.getElementById('records-total-badge');
+const historyFilterForm = document.getElementById('history-filter-form');
+const filterStartDate = document.getElementById('filter-start-date');
+const filterEndDate = document.getElementById('filter-end-date');
+const resetFilterBtn = document.getElementById('reset-filter-btn');
+const presetChips = document.querySelectorAll('.preset-chip');
+const filterStatusBanner = document.getElementById('filter-status-banner');
+const filterStatusText = document.getElementById('filter-status-text');
+const clearFilterPillBtn = document.getElementById('clear-filter-pill-btn');
 
 /**
  * Determine category information for a given AQI value
@@ -206,6 +221,16 @@ function formatDateTime(isoString) {
 }
 
 /**
+ * Helper to format date as YYYY-MM-DD in local time
+ */
+function formatDateYMD(d) {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+/**
  * Fetch latest AQI reading from API
  */
 async function fetchLatestAqi() {
@@ -260,13 +285,16 @@ async function fetchLatestAqi() {
 }
 
 /**
- * Fetch AQI history with page and page_size parameters
+ * Fetch AQI history with page, page_size, start_date and end_date parameters
+ * Format: ?page=1&page_size=20&start_date=...&end_date=...
  */
 async function fetchHistoryAqi(page = currentPage) {
   try {
     const url = new URL(CONFIG.API_HISTORY);
     url.searchParams.set('page', page);
     url.searchParams.set('page_size', pageSize);
+    url.searchParams.set('start_date', currentFilter.startDate || '');
+    url.searchParams.set('end_date', currentFilter.endDate || '');
 
     const response = await fetch(url.toString(), { cache: 'no-store' });
     
@@ -294,6 +322,7 @@ async function fetchHistoryAqi(page = currentPage) {
     renderHistoryTable(displayedRecords);
     updatePaginationUI(totalRecords, currentPage);
     updateRecordsCountBadge(totalRecords);
+    updateFilterStatusUI();
     return displayedRecords;
   } catch (error) {
     console.error('Failed to fetch AQI history:', error);
@@ -317,6 +346,92 @@ function updateRecordsCountBadge(total) {
   if (!recordsTotalBadge) return;
   recordsTotalBadge.textContent = `${total} ${total === 1 ? 'record' : 'records'}`;
 }
+
+/**
+ * Update filter banner and chips UI
+ */
+function updateFilterStatusUI() {
+  if (!filterStatusBanner || !filterStatusText) return;
+
+  const hasFilter = Boolean(currentFilter.startDate || currentFilter.endDate);
+  if (hasFilter) {
+    filterStatusBanner.style.display = 'inline-flex';
+    const startText = currentFilter.startDate || 'Start';
+    const endText = currentFilter.endDate || 'End';
+    filterStatusText.textContent = `${startText} → ${endText} (${totalRecords} found)`;
+  } else {
+    filterStatusBanner.style.display = 'none';
+  }
+}
+
+/**
+ * Update active chip style
+ */
+function updatePresetChipsUI(activePreset) {
+  presetChips.forEach((chip) => {
+    if (chip.getAttribute('data-preset') === activePreset) {
+      chip.classList.add('active');
+    } else {
+      chip.classList.remove('active');
+    }
+  });
+}
+
+/**
+ * Apply quick filter preset
+ */
+function applyPreset(preset) {
+  const now = new Date();
+  let start = '';
+  let end = '';
+
+  if (preset === 'today') {
+    start = formatDateYMD(now);
+    end = formatDateYMD(now);
+  } else if (preset === 'yesterday') {
+    const yesterday = new Date(now);
+    yesterday.setDate(yesterday.getDate() - 1);
+    start = formatDateYMD(yesterday);
+    end = formatDateYMD(yesterday);
+  } else if (preset === '7days') {
+    const past7 = new Date(now);
+    past7.setDate(past7.getDate() - 6);
+    start = formatDateYMD(past7);
+    end = formatDateYMD(now);
+  } else {
+    // 'all'
+    start = '';
+    end = '';
+  }
+
+  filterStartDate.value = start;
+  filterEndDate.value = end;
+  currentFilter.startDate = start;
+  currentFilter.endDate = end;
+  currentFilter.preset = preset;
+  updatePresetChipsUI(preset);
+
+  currentPage = 1;
+  fetchHistoryAqi(1);
+}
+
+/**
+ * Reset date filter
+ */
+function resetDateFilter() {
+  filterStartDate.value = '';
+  filterEndDate.value = '';
+  currentFilter.startDate = '';
+  currentFilter.endDate = '';
+  currentFilter.preset = 'all';
+  updatePresetChipsUI('all');
+
+  currentPage = 1;
+  fetchHistoryAqi(1);
+}
+
+// Global hook for reset button inside empty table state
+window.resetHistoryFilter = resetDateFilter;
 
 /**
  * Update pagination numbers, status text, and navigation buttons
@@ -379,12 +494,16 @@ function updatePaginationUI(total, current) {
  */
 function renderHistoryTable(records) {
   if (!records || records.length === 0) {
+    const isFiltered = Boolean(currentFilter.startDate || currentFilter.endDate);
     historyTableBody.innerHTML = `
       <tr>
         <td colspan="3" class="loading-cell">
           <div style="padding: 1.25rem 0;">
             <p style="font-weight: 600; color: #475569; margin-bottom: 0.35rem;">No AQI records found</p>
-            <p style="font-size: 0.85rem; color: #94a3b8;">No sensor observations recorded yet.</p>
+            <p style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 0.75rem;">
+              ${isFiltered ? 'No records match your selected date range.' : 'No sensor observations recorded yet.'}
+            </p>
+            ${isFiltered ? '<button type="button" class="filter-btn filter-btn-secondary" style="font-size: 0.8rem; padding: 0.35rem 0.75rem; margin: 0 auto;" onclick="window.resetHistoryFilter()">Clear Filters</button>' : ''}
           </div>
         </td>
       </tr>
@@ -446,6 +565,45 @@ function init() {
   // Manual refresh click handler
   refreshBtn.addEventListener('click', () => {
     refreshDashboard();
+  });
+
+  // Filter form submit
+  if (historyFilterForm) {
+    historyFilterForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const start = filterStartDate.value.trim();
+      const end = filterEndDate.value.trim();
+
+      if (start && end && start > end) {
+        alert('Start date cannot be after end date.');
+        return;
+      }
+
+      currentFilter.startDate = start;
+      currentFilter.endDate = end;
+      currentFilter.preset = 'custom';
+      updatePresetChipsUI('custom');
+      currentPage = 1;
+      fetchHistoryAqi(1);
+    });
+  }
+
+  // Filter reset button
+  if (resetFilterBtn) {
+    resetFilterBtn.addEventListener('click', resetDateFilter);
+  }
+
+  // Clear filter pill button in banner
+  if (clearFilterPillBtn) {
+    clearFilterPillBtn.addEventListener('click', resetDateFilter);
+  }
+
+  // Preset chips click
+  presetChips.forEach((chip) => {
+    chip.addEventListener('click', () => {
+      const preset = chip.getAttribute('data-preset');
+      applyPreset(preset);
+    });
   });
 
   // Page size selector handler
