@@ -181,6 +181,28 @@
           </tbody>
         </table>
       </div>
+
+      <!-- Pagination Controls (10 items per page) -->
+      <div class="pagination-container" id="pagination-container">
+        <div class="pagination-info" id="pagination-info">Showing 1 to 5 of 5 records</div>
+        <div class="pagination-controls">
+          <button type="button" class="page-nav-btn" id="prev-page-btn" disabled aria-label="Previous Page">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M15 19l-7-7 7-7"/>
+            </svg>
+            <span>Previous</span>
+          </button>
+          <div class="page-numbers-list" id="page-numbers-list">
+            <!-- Dynamically populated buttons -->
+          </div>
+          <button type="button" class="page-nav-btn" id="next-page-btn" disabled aria-label="Next Page">
+            <span>Next</span>
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M9 5l7 7-7 7"/>
+            </svg>
+          </button>
+        </div>
+      </div>
     </section>
   </div>
 
