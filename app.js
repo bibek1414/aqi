@@ -87,6 +87,7 @@ let currentPage = 1;
 let pageSize = CONFIG.PAGE_SIZE;
 let totalPages = 1;
 let totalRecords = 0;
+let fpInstance = null;
 
 // Filter state
 let currentFilter = {
@@ -113,14 +114,10 @@ const nextPageBtn = document.getElementById('next-page-btn');
 const pageNumbersList = document.getElementById('page-numbers-list');
 const pageSizeSelect = document.getElementById('page-size-select');
 const recordsTotalBadge = document.getElementById('records-total-badge');
-const historyFilterForm = document.getElementById('history-filter-form');
-const filterStartDate = document.getElementById('filter-start-date');
-const filterEndDate = document.getElementById('filter-end-date');
+const filterDateRange = document.getElementById('filter-date-range');
+const clearDateInputBtn = document.getElementById('clear-date-input-btn');
 const resetFilterBtn = document.getElementById('reset-filter-btn');
 const presetChips = document.querySelectorAll('.preset-chip');
-const filterStatusBanner = document.getElementById('filter-status-banner');
-const filterStatusText = document.getElementById('filter-status-text');
-const clearFilterPillBtn = document.getElementById('clear-filter-pill-btn');
 
 /**
  * Determine category information for a given AQI value
@@ -231,6 +228,50 @@ function formatDateYMD(d) {
 }
 
 /**
+ * Initialize merged date range calendar with automatic filtering on selection
+ */
+function initFlatpickr() {
+  if (typeof flatpickr !== 'undefined' && filterDateRange) {
+    fpInstance = flatpickr(filterDateRange, {
+      mode: 'range',
+      dateFormat: 'Y-m-d',
+      altInput: true,
+      altFormat: 'M j, Y',
+      conjunction: ' to ',
+      maxDate: 'today',
+      onChange: function(selectedDates) {
+        if (selectedDates && selectedDates.length > 0) {
+          if (clearDateInputBtn) clearDateInputBtn.style.display = 'inline-flex';
+        } else {
+          if (clearDateInputBtn) clearDateInputBtn.style.display = 'none';
+        }
+
+        // Auto-filter as soon as 2 dates (a range) are picked
+        if (selectedDates && selectedDates.length === 2) {
+          currentFilter.startDate = formatDateYMD(selectedDates[0]);
+          currentFilter.endDate = formatDateYMD(selectedDates[1]);
+          currentFilter.preset = 'custom';
+          updatePresetChipsUI('custom');
+          currentPage = 1;
+          fetchHistoryAqi(1);
+        }
+      },
+      onClose: function(selectedDates) {
+        // If user picked a single date and closed the calendar, auto-filter that day
+        if (selectedDates && selectedDates.length === 1) {
+          currentFilter.startDate = formatDateYMD(selectedDates[0]);
+          currentFilter.endDate = formatDateYMD(selectedDates[0]);
+          currentFilter.preset = 'custom';
+          updatePresetChipsUI('custom');
+          currentPage = 1;
+          fetchHistoryAqi(1);
+        }
+      }
+    });
+  }
+}
+
+/**
  * Fetch latest AQI reading from API
  */
 async function fetchLatestAqi() {
@@ -286,7 +327,7 @@ async function fetchLatestAqi() {
 
 /**
  * Fetch AQI history with page, page_size, start_date and end_date parameters
- * Format: ?page=1&page_size=20&start_date=...&end_date=...
+ * API URL format: ?page=1&page_size=20&start_date=...&end_date=...
  */
 async function fetchHistoryAqi(page = currentPage) {
   try {
@@ -322,7 +363,6 @@ async function fetchHistoryAqi(page = currentPage) {
     renderHistoryTable(displayedRecords);
     updatePaginationUI(totalRecords, currentPage);
     updateRecordsCountBadge(totalRecords);
-    updateFilterStatusUI();
     return displayedRecords;
   } catch (error) {
     console.error('Failed to fetch AQI history:', error);
@@ -348,23 +388,6 @@ function updateRecordsCountBadge(total) {
 }
 
 /**
- * Update filter banner and chips UI
- */
-function updateFilterStatusUI() {
-  if (!filterStatusBanner || !filterStatusText) return;
-
-  const hasFilter = Boolean(currentFilter.startDate || currentFilter.endDate);
-  if (hasFilter) {
-    filterStatusBanner.style.display = 'inline-flex';
-    const startText = currentFilter.startDate || 'Start';
-    const endText = currentFilter.endDate || 'End';
-    filterStatusText.textContent = `${startText} → ${endText} (${totalRecords} found)`;
-  } else {
-    filterStatusBanner.style.display = 'none';
-  }
-}
-
-/**
  * Update active chip style
  */
 function updatePresetChipsUI(activePreset) {
@@ -378,7 +401,7 @@ function updatePresetChipsUI(activePreset) {
 }
 
 /**
- * Apply quick filter preset
+ * Apply quick filter preset with auto-filtering
  */
 function applyPreset(preset) {
   const now = new Date();
@@ -388,24 +411,30 @@ function applyPreset(preset) {
   if (preset === 'today') {
     start = formatDateYMD(now);
     end = formatDateYMD(now);
+    if (fpInstance) fpInstance.setDate([start, end], false);
   } else if (preset === 'yesterday') {
     const yesterday = new Date(now);
     yesterday.setDate(yesterday.getDate() - 1);
     start = formatDateYMD(yesterday);
     end = formatDateYMD(yesterday);
+    if (fpInstance) fpInstance.setDate([start, end], false);
   } else if (preset === '7days') {
     const past7 = new Date(now);
     past7.setDate(past7.getDate() - 6);
     start = formatDateYMD(past7);
     end = formatDateYMD(now);
+    if (fpInstance) fpInstance.setDate([start, end], false);
   } else {
     // 'all'
     start = '';
     end = '';
+    if (fpInstance) fpInstance.clear();
   }
 
-  filterStartDate.value = start;
-  filterEndDate.value = end;
+  if (clearDateInputBtn) {
+    clearDateInputBtn.style.display = start ? 'inline-flex' : 'none';
+  }
+
   currentFilter.startDate = start;
   currentFilter.endDate = end;
   currentFilter.preset = preset;
@@ -416,11 +445,13 @@ function applyPreset(preset) {
 }
 
 /**
- * Reset date filter
+ * Clear date filter and reload all records
  */
 function resetDateFilter() {
-  filterStartDate.value = '';
-  filterEndDate.value = '';
+  if (fpInstance) fpInstance.clear();
+  if (filterDateRange) filterDateRange.value = '';
+  if (clearDateInputBtn) clearDateInputBtn.style.display = 'none';
+
   currentFilter.startDate = '';
   currentFilter.endDate = '';
   currentFilter.preset = 'all';
@@ -503,7 +534,7 @@ function renderHistoryTable(records) {
             <p style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 0.75rem;">
               ${isFiltered ? 'No records match your selected date range.' : 'No sensor observations recorded yet.'}
             </p>
-            ${isFiltered ? '<button type="button" class="filter-btn filter-btn-secondary" style="font-size: 0.8rem; padding: 0.35rem 0.75rem; margin: 0 auto;" onclick="window.resetHistoryFilter()">Clear Filters</button>' : ''}
+            ${isFiltered ? '<button type="button" class="filter-btn filter-btn-clear" style="font-size: 0.8rem; padding: 0.35rem 0.75rem; margin: 0 auto;" onclick="window.resetHistoryFilter()">Clear Filter</button>' : ''}
           </div>
         </td>
       </tr>
@@ -555,6 +586,9 @@ async function refreshDashboard() {
  * Setup recurring auto-refresh and event handlers
  */
 function init() {
+  // Initialize merged calendar range picker
+  initFlatpickr();
+
   // Initial load
   refreshDashboard();
 
@@ -567,35 +601,14 @@ function init() {
     refreshDashboard();
   });
 
-  // Filter form submit
-  if (historyFilterForm) {
-    historyFilterForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const start = filterStartDate.value.trim();
-      const end = filterEndDate.value.trim();
-
-      if (start && end && start > end) {
-        alert('Start date cannot be after end date.');
-        return;
-      }
-
-      currentFilter.startDate = start;
-      currentFilter.endDate = end;
-      currentFilter.preset = 'custom';
-      updatePresetChipsUI('custom');
-      currentPage = 1;
-      fetchHistoryAqi(1);
-    });
+  // Clear date input button (inside the input)
+  if (clearDateInputBtn) {
+    clearDateInputBtn.addEventListener('click', resetDateFilter);
   }
 
-  // Filter reset button
+  // Clear / Reset filter button
   if (resetFilterBtn) {
     resetFilterBtn.addEventListener('click', resetDateFilter);
-  }
-
-  // Clear filter pill button in banner
-  if (clearFilterPillBtn) {
-    clearFilterPillBtn.addEventListener('click', resetDateFilter);
   }
 
   // Preset chips click

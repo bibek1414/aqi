@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -168,67 +169,36 @@
         </div>
       </div>
 
-      <!-- Date Range Filter Toolbar -->
+      <!-- Merged Single Date Range Calendar Toolbar -->
       <div class="filter-card">
-        <form id="history-filter-form" class="filter-form">
+        <div class="filter-toolbar">
           <div class="filter-inputs-group">
-            <div class="filter-field">
-              <label for="filter-start-date" class="filter-label">
-                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+            <div class="date-range-field">
+              <span class="calendar-icon-prefix">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
                   <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
                   <line x1="16" y1="2" x2="16" y2="6"></line>
                   <line x1="8" y1="2" x2="8" y2="6"></line>
                   <line x1="3" y1="10" x2="21" y2="10"></line>
                 </svg>
-                <span>Start Date</span>
-              </label>
-              <input type="date" id="filter-start-date" class="filter-input" name="start_date" />
+              </span>
+              <input type="text" id="filter-date-range" class="date-range-input" placeholder="Select date range..." readonly />
+              <button type="button" id="clear-date-input-btn" class="clear-input-btn" title="Clear dates" style="display: none;">&times;</button>
             </div>
 
-            <div class="filter-field">
-              <label for="filter-end-date" class="filter-label">
-                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
-                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                  <line x1="16" y1="2" x2="16" y2="6"></line>
-                  <line x1="8" y1="2" x2="8" y2="6"></line>
-                  <line x1="3" y1="10" x2="21" y2="10"></line>
-                </svg>
-                <span>End Date</span>
-              </label>
-              <input type="date" id="filter-end-date" class="filter-input" name="end_date" />
-            </div>
-          </div>
-
-          <div class="filter-actions-group">
-            <button type="submit" id="apply-filter-btn" class="filter-btn filter-btn-primary">
-              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2">
-                <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+            <button type="button" id="reset-filter-btn" class="filter-btn filter-btn-clear" title="Clear date filter">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 6L6 18M6 6l12 12"></path>
               </svg>
-              <span>Filter</span>
-            </button>
-
-            <button type="button" id="reset-filter-btn" class="filter-btn filter-btn-secondary" title="Reset date filters">
-              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="18" y1="6" x2="6" y2="18"></line>
-                <line x1="6" y1="6" x2="18" y2="18"></line>
-              </svg>
-              <span>Reset</span>
+              <span>Clear</span>
             </button>
           </div>
-        </form>
 
-        <div class="filter-bottom-bar">
           <div class="filter-presets">
-            <span class="presets-label">Quick:</span>
             <button type="button" class="preset-chip active" data-preset="all">All</button>
             <button type="button" class="preset-chip" data-preset="today">Today</button>
             <button type="button" class="preset-chip" data-preset="yesterday">Yesterday</button>
-            <button type="button" class="preset-chip" data-preset="7days">Last 7 Days</button>
-          </div>
-
-          <div id="filter-status-banner" class="filter-status-banner" style="display: none;">
-            <span id="filter-status-text" class="filter-status-text">Filtered</span>
-            <button type="button" id="clear-filter-pill-btn" class="clear-filter-pill-btn" title="Remove filter">&times;</button>
+            <button type="button" class="preset-chip" data-preset="7days">Last 7d</button>
           </div>
         </div>
       </div>
@@ -253,7 +223,7 @@
       <!-- Pagination Controls -->
       <div class="pagination-container" id="pagination-container">
         <div class="pagination-left">
-          <div class="pagination-info" id="pagination-info">Showing 1 to 10 of 10 records</div>
+          <div class="pagination-info" id="pagination-info">Showing 1 to 20 of 20 records</div>
           <div class="page-size-wrapper">
             <label for="page-size-select" class="page-size-label">Show:</label>
             <select id="page-size-select" class="page-size-select" aria-label="Records per page">
@@ -287,6 +257,7 @@
     </section>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
   <script src="app.js"></script>
 </body>
 </html>
