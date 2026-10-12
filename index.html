@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Air Quality Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="dashboard-container">
+    <!-- Header -->
+    <header class="header-section">
+      <div class="accent-bar"></div>
+      <div class="header-content">
+        <div>
+          <h1 class="dashboard-title">Air Quality Dashboard</h1>
+          <p class="dashboard-subtitle">Real-time environmental monitoring powered by Baliyo Ventures</p>
+        </div>
+        <div class="header-actions">
+          <div class="live-status-pill" id="live-indicator">
+            <span class="pulsing-dot"></span>
+            <span id="connection-status">Live</span>
+          </div>
+          <button id="refresh-btn" class="refresh-btn" title="Refresh AQI data">
+            <svg class="refresh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+            </svg>
+            <span class="refresh-text">Refresh</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Gauge Card (Matches screenshot layout) -->
+    <main class="main-card">
+      <div class="card-top-bar">
+        <h2 class="card-caption">Current Air Quality</h2>
+        <div class="last-updated-text" id="last-updated-display">
+          Last updated: <span id="last-updated-time">Loading...</span>
+        </div>
+      </div>
+
+      <div class="gauge-and-legend-grid">
+        <!-- Left: Speedometer Gauge -->
+        <div class="gauge-column">
+          <div class="gauge-wrapper">
+            <svg id="aqi-gauge" class="gauge-svg" viewBox="0 0 420 250" role="img" aria-label="AQI Speedometer Gauge">
+              <defs>
+                <filter id="needle-shadow" x="-30%" y="-30%" width="160%" height="160%">
+                  <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="rgba(0,0,0,0.35)"/>
+                </filter>
+                <radialGradient id="center-cap-gradient" cx="40%" cy="40%" r="60%">
+                  <stop offset="0%" stop-color="#4b5563"/>
+                  <stop offset="100%" stop-color="#1f2937"/>
+                </radialGradient>
+              </defs>
+
+              <!-- Semicircle Segments (6 slices, 30 deg each, 0 to 300 AQI) -->
+              <g id="gauge-segments">
+                <!-- Segment 1: Good (0-50, 180° to 150°) -->
+                <path class="gauge-segment" data-segment="0" fill="#00b050" d="M 50 210 A 160 160 0 0 1 71.44 130 L 123.65 160 A 100 100 0 0 0 110 210 Z"/>
+                <!-- Segment 2: Moderate (51-100, 150° to 120°) -->
+                <path class="gauge-segment" data-segment="1" fill="#ffff00" d="M 71.44 130 A 160 160 0 0 1 130 71.44 L 160 123.65 A 100 100 0 0 0 123.65 160 Z"/>
+                <!-- Segment 3: Unhealthy for Sensitive Groups (101-150, 120° to 90°) -->
+                <path class="gauge-segment" data-segment="2" fill="#ff7e00" d="M 130 71.44 A 160 160 0 0 1 210 50 L 210 110 A 100 100 0 0 0 160 123.65 Z"/>
+                <!-- Segment 4: Unhealthy (151-200, 90° to 60°) -->
+                <path class="gauge-segment" data-segment="3" fill="#ff0000" d="M 210 50 A 160 160 0 0 1 290 71.44 L 260 123.65 A 100 100 0 0 0 210 110 Z"/>
+                <!-- Segment 5: Very Unhealthy (201-250, 60° to 30°) -->
+                <path class="gauge-segment" data-segment="4" fill="#7030a0" d="M 290 71.44 A 160 160 0 0 1 348.56 130 L 296.35 160 A 100 100 0 0 0 260 123.65 Z"/>
+                <!-- Segment 6: Very Hazardous (251-300, 30° to 0°) -->
+                <path class="gauge-segment" data-segment="5" fill="#7e0023" d="M 348.56 130 A 160 160 0 0 1 370 210 L 310 210 A 100 100 0 0 0 296.35 160 Z"/>
+              </g>
+
+              <!-- Needle and Pivot (Rotates around cx=210, cy=210) -->
+              <g id="needle-group" filter="url(#needle-shadow)" style="transform-origin: 210px 210px; transform: rotate(-90deg);">
+                <!-- Needle pointer pointing towards 12 o'clock (0 deg) -->
+                <polygon points="204,210 207,65 210,55 213,65 216,210" fill="#2d3748"/>
+                <circle cx="210" cy="210" r="16" fill="url(#center-cap-gradient)" stroke="#111827" stroke-width="2"/>
+                <circle cx="210" cy="210" r="6" fill="#f3f4f6"/>
+              </g>
+            </svg>
+
+            <!-- Value Display directly beneath needle -->
+            <div class="gauge-value-box">
+              <span id="aqi-value-number" class="aqi-value-number">--</span>
+              <span class="aqi-unit">AQI</span>
+            </div>
+
+            <!-- Health Status Badge -->
+            <div class="health-badge-container">
+              <span id="status-badge" class="status-badge">Checking...</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Air Quality Index Legend -->
+        <div class="legend-column">
+          <h3 class="legend-header">Air Quality Index</h3>
+          <ul class="legend-list" id="legend-list">
+            <li class="legend-item" data-range="0">
+              <span class="legend-bullet" style="background-color: #00b050;"></span>
+              <div class="legend-text">
+                <span class="legend-label">Good</span>
+                <span class="legend-scale">0–50</span>
+              </div>
+            </li>
+            <li class="legend-item" data-range="1">
+              <span class="legend-bullet" style="background-color: #ffff00;"></span>
+              <div class="legend-text">
+                <span class="legend-label">Moderate</span>
+                <span class="legend-scale">51–100</span>
+              </div>
+            </li>
+            <li class="legend-item" data-range="2">
+              <span class="legend-bullet" style="background-color: #ff7e00;"></span>
+              <div class="legend-text">
+                <span class="legend-label">Unhealthy for Sensitive Groups</span>
+                <span class="legend-scale">101–150</span>
+              </div>
+            </li>
+            <li class="legend-item" data-range="3">
+              <span class="legend-bullet" style="background-color: #ff0000;"></span>
+              <div class="legend-text">
+                <span class="legend-label">Unhealthy</span>
+                <span class="legend-scale">151–200</span>
+              </div>
+            </li>
+            <li class="legend-item" data-range="4">
+              <span class="legend-bullet" style="background-color: #7030a0;"></span>
+              <div class="legend-text">
+                <span class="legend-label">Very Unhealthy</span>
+                <span class="legend-scale">201–250</span>
+              </div>
+            </li>
+            <li class="legend-item" data-range="5">
+              <span class="legend-bullet" style="background-color: #7e0023;"></span>
+              <div class="legend-text">
+                <span class="legend-label">Very Hazardous</span>
+                <span class="legend-scale">251–300</span>
+              </div>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Health Recommendation Strip -->
+      <div class="health-advice-box" id="health-advice-container">
+        <div class="advice-icon">💡</div>
+        <div class="advice-content">
+          <strong id="advice-headline">Health Advisory</strong>
+          <p id="advice-description">Loading health advisory guidelines...</p>
+        </div>
+      </div>
+    </main>
+
+    <!-- History / Recent Observations Section (from /api/aqi/) -->
+    <section class="history-section">
+      <div class="history-header">
+        <div>
+          <h2 class="history-title">Recent AQI Records</h2>
+          <p class="history-subtitle">Historical air quality measurements from the sensor stream</p>
+        </div>
+        <div class="records-count-badge" id="records-count">
+          Showing 5 records
+        </div>
+      </div>
+
+      <div class="history-table-container">
+        <table class="history-table" id="history-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>AQI Value</th>
+              <th>Status</th>
+              <th>Recorded Time</th>
+            </tr>
+          </thead>
+          <tbody id="history-table-body">
+            <tr>
+              <td colspan="4" class="loading-cell">Loading history records...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
